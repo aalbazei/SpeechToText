@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <p id="outputText"></p>
+
+    <script>
+        // Check if the browser supports the Web Speech API
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+            // Create a SpeechRecognition object
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+            // Set the language for speech recognition, ar-SA or en-US
+            recognition.lang = 'ar-SA';
+
+            // When the recognition starts, show a message
+            recognition.onstart = function () {
+                console.log('Listening...');
+            };
+
+            // When the user stops speaking, get the transcript and display it
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('outputText').innerText = transcript;
+
+                // Send the transcript to the PHP script using AJAX
+                const xhr = new XMLHttpRequest();
+                const url = 'insert_speech_data.php'; // PHP script
+                const params = 'transcript=' + encodeURIComponent(transcript);
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        console.log(xhr.responseText);
+                    }
+                };
+                xhr.send(params);
+            };
+			// Start the recognition again (infinite loop)
+            recognition.onend = function () {
+                recognition.start();
+            };
+
+            // Start the recognition when the page loads
+            recognition.start();
+        } else {
+            alert('Your browser does not support the Web Speech API. Please use a compatible browser.');
+        }
+    </script>
+</body>
+</html>
